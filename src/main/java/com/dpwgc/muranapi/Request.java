@@ -2,7 +2,7 @@ package com.dpwgc.muranapi;
 
 public class Request {
     private String method;
-    private String uri;
+    private String path;
     private Params query;
     private byte[] body;
     private Params headers;
@@ -15,12 +15,23 @@ public class Request {
         this.method = method;
     }
 
-    public String getUri() {
-        return uri;
+    public String getPath() {
+        return path;
     }
 
-    public void setUri(String uri) {
-        this.uri = uri;
+    public String getPath(int i) {
+        if (path == null || path.isEmpty()) {
+            return null;
+        }
+        String[] ss = path.split("/");
+        if (ss.length > i) {
+            return ss[i];
+        }
+        return null;
+    }
+
+    public void setPath(String uri) {
+        this.path = uri;
     }
 
     public Params getQuery() {

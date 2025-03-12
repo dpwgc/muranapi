@@ -22,16 +22,17 @@ public class TrieTree {
 
     public Node search(String path) {
         TrieNode trieNode = root;
+        Node node = null;
         for (char c : path.toCharArray()) {
             if (!trieNode.children.containsKey(c)) {
-                return null;
+                return node;
             }
             trieNode = trieNode.children.get(c);
+            if (trieNode.node != null) {
+                node = trieNode.node;
+            }
         }
-        if (trieNode != null && trieNode.node != null) {
-            return trieNode.node;
-        }
-        return null;
+        return node;
     }
 
     public static class TrieNode {

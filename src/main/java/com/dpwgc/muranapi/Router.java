@@ -66,12 +66,15 @@ public class Router {
     }
 
     public Router add(Method method, String path, Handler handler) {
-        tree.insert(root + path + method.getName(), new Node(handler));
+        if (path.contains("/:")) {
+            path = path.split("/:")[0];
+        }
+        tree.insert(method.getName() + root + path, new Node(handler));
         return this;
     }
 
     public Node search(String method, String path) {
-        return tree.search(path + method);
+        return tree.search(method + path);
     }
 
     public Router port(int port) {
@@ -143,7 +146,7 @@ public class Router {
 
                 Request request = new Request();
                 request.setMethod(httpExchange.getRequestMethod());
-                request.setUri(httpExchange.getRequestURI().getPath());
+                request.setPath(httpExchange.getRequestURI().getPath());
 
                 request.setHeaders(new Params());
                 request.setQuery(new Params());
