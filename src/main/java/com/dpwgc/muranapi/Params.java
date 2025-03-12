@@ -5,18 +5,18 @@ import java.util.Set;
 
 public class Params {
 
-    private LinkedHashMap<String, String> map = new LinkedHashMap<>();
+    private final LinkedHashMap<String, String> map = new LinkedHashMap<>();
 
-    public void setMap(LinkedHashMap<String, String> map) {
-        this.map = map;
+    public Params() {
+
     }
 
-    public LinkedHashMap<String, String> source() {
+    public Params(String key, String value) {
+        map.put(key, value);
+    }
+
+    public LinkedHashMap<String, String> map() {
         return map;
-    }
-
-    public String get(String key) {
-        return map.get(key);
     }
 
     public Integer getInt(String key) {
@@ -50,8 +50,13 @@ public class Params {
         return map.get(key).split(split);
     }
 
-    public void set(String key, String value) {
+    public Params set(String key, String value) {
         map.put(key, value);
+        return this;
+    }
+
+    public String get(String key) {
+        return map.get(key);
     }
 
     public Set<String> keySet() {

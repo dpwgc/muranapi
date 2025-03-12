@@ -10,13 +10,12 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 
 public class Router {
 
-    private final Map<String, Node> map = new ConcurrentHashMap<>();
+    private HttpServer server;
+    private final TrieTree tree = new TrieTree();
     private int port = 8080;
     private int thread = 8;
     private String root = "/";
@@ -51,7 +50,7 @@ public class Router {
     }
 
     public Router add(Method method, String path, Handler handler) {
-        map.put(method + path, new Node(method, handler));
+        tree.insert(method + path, new Node(method, handler));
         return this;
     }
 
@@ -75,15 +74,22 @@ public class Router {
         return this;
     }
 
-    public Node match(String method, String path) {
-        return map.get(method + path);
+    public Router server(HttpServer server) {
+        this.server = server;
+        return this;
     }
 
     public void run() throws IOException {
-        HttpServer httpServer = HttpServer.create(new InetSocketAddress(this.port), 0);
-        httpServer.createContext(this.root, new IOHandler(this));
-        httpServer.setExecutor(Executors.newFixedThreadPool(this.thread));
-        httpServer.start();
+        if (server == null) {
+            server = HttpServer.create(new InetSocketAddress(this.port), 0);
+        }
+        server.createContext(this.root, new IOHandler(this));
+        server.setExecutor(Executors.newFixedThreadPool(this.thread));
+        server.start();
+    }
+
+    public Node search(String method, String path) {
+        return tree.search(method + path);
     }
 
     private static class IOHandler implements HttpHandler {
@@ -97,15 +103,11 @@ public class Router {
         @Override
         public void handle(HttpExchange httpExchange) {
             try {
-                Node node = router.match(httpExchange.getRequestMethod(), httpExchange.getRequestURI().getPath());
+
+                Node node = router.search(httpExchange.getRequestMethod(), httpExchange.getRequestURI().getPath());
 
                 if (node == null) {
-                    byte[] nf = "not found".getBytes();
-                    httpExchange.sendResponseHeaders(404, nf.length);
-                    OutputStream out = httpExchange.getResponseBody();
-                    out.write(nf);
-                    out.flush();
-                    out.close();
+                    response(httpExchange, 404, "not found".getBytes());
                     return;
                 }
 
@@ -146,28 +148,41 @@ public class Router {
                     request.setBody(buffer.toByteArray());
                 }
 
-                Reply reply = node.getHandler().execute(request);
+                Reply reply = null;
+                try {
+                    reply = node.getHandler().execute(request);
+                } catch (Throwable e) {
+                    error(e);
+                    response(httpExchange, 500, "internal server error".getBytes());
+                    return;
+                }
 
-                //设置响应头，必须在sendResponseHeaders方法之前设置！
+                // 响应头
                 if (reply.getHeaders() != null) {
                     for (String key : reply.getHeaders().keySet()) {
                         httpExchange.getResponseHeaders().add(key, reply.getHeaders().get(key));
                     }
                 }
 
-                //设置响应码和响应体长度，必须在getResponseBody方法之前调用！
-                httpExchange.sendResponseHeaders(reply.getCode(), reply.getBody().length);
+                response(httpExchange, reply.getCode(), reply.getBody());
 
-                OutputStream out = httpExchange.getResponseBody();
-                out.write(reply.getBody());
-                out.flush();
-                out.close();
-
-            } catch (Exception ex) {
-                if (router.error != null) {
-                    router.error.execute(ex);
-                }
+            } catch (Throwable e) {
+                error(e);
             }
+        }
+
+        private void error(Throwable e) {
+            if (router.error != null) {
+                router.error.execute(e);
+            }
+        }
+
+        private void response(HttpExchange httpExchange, int code, byte[] body) throws IOException {
+            httpExchange.sendResponseHeaders(code, body.length);
+            OutputStream out = httpExchange.getResponseBody();
+            out.write(body);
+            out.flush();
+            out.close();
         }
     }
 }

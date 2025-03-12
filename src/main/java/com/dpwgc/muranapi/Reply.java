@@ -10,9 +10,22 @@ public class Reply {
 
     }
 
+    public Reply(String body) {
+        if (body != null && !body.isEmpty()) {
+            this.code = 200;
+            this.body = body.getBytes();
+        } else {
+            this.body = "".getBytes();
+        }
+    }
+
     public Reply(byte[] body) {
-        this.code = 200;
-        this.body = body;
+        if (body != null && body.length > 0) {
+            this.code = 200;
+            this.body = body;
+        } else {
+            this.body = "".getBytes();
+        }
     }
 
     public Reply(int code, byte[] body) {
@@ -20,9 +33,44 @@ public class Reply {
         this.body = body;
     }
 
+    public Reply(int code, String body) {
+        this.code = code;
+        if (body != null) {
+            this.body = body.getBytes();
+        } else {
+            this.body = "".getBytes();
+        }
+    }
+
+    public Reply(byte[] body, Params headers) {
+        if (body != null && body.length > 0) {
+            this.code = 200;
+            this.body = body;
+        } else {
+            this.body = "".getBytes();
+        }
+        this.headers = headers;
+    }
+
+    public Reply(String body, Params headers) {
+        if (body != null && !body.isEmpty()) {
+            this.code = 200;
+            this.body = body.getBytes();
+        } else {
+            this.body = "".getBytes();
+        }
+        this.headers = headers;
+    }
+
     public Reply(int code, byte[] body, Params headers) {
         this.code = code;
         this.body = body;
+        this.headers = headers;
+    }
+
+    public Reply(int code, String body, Params headers) {
+        this.code = code;
+        this.body = body.getBytes();
         this.headers = headers;
     }
 
