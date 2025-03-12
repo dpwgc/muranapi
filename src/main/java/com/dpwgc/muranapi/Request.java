@@ -19,6 +19,30 @@ public class Request {
         return path;
     }
 
+    public Integer getPathInt(int i) {
+        try {
+            return Integer.parseInt(getPath(i));
+        } catch (Throwable e) {
+            return null;
+        }
+    }
+
+    public Long getPathLong(int i) {
+        try {
+            return Long.parseLong(getPath(i));
+        } catch (Throwable e) {
+            return null;
+        }
+    }
+
+    public Double getPathDouble(int i) {
+        try {
+            return Double.parseDouble(getPath(i));
+        } catch (Throwable e) {
+            return null;
+        }
+    }
+
     public String getPath(int i) {
         if (path == null || path.isEmpty()) {
             return null;

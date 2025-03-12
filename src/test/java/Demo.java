@@ -69,7 +69,7 @@ public class Demo {
          * 带路径参数的GET请求接口
          */
         public Reply pathValue(Request request) {
-            System.out.println("id: " + request.getPath(3));
+            System.out.println("id: " + request.getPathLong(3));
             return new Reply("hi");
         }
     }
