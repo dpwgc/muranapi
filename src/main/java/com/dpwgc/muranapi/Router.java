@@ -18,7 +18,7 @@ public class Router {
     private final TrieTree tree = new TrieTree();
     private int port = 8080;
     private int thread = 8;
-    private String root = "/";
+    private String root = "";
     private Error error;
 
     public Router get(String path, Handler handler) {
@@ -49,9 +49,20 @@ public class Router {
         return this.add(Method.OPTIONS, path, handler);
     }
 
-    public Router add(Method method, String path, Handler handler) {
-        tree.insert(method + path, new Node(method, handler));
+    public Router group(String path, Group group) {
+        for (Triple<Method, String, Handler> item : group.getItems()) {
+            this.add(item.getFirst(), path + item.getSecond(), item.getThird());
+        }
         return this;
+    }
+
+    public Router add(Method method, String path, Handler handler) {
+        tree.insert(root + path + method.getName(), new Node(method, handler));
+        return this;
+    }
+
+    public Node search(String method, String path) {
+        return tree.search(path + method);
     }
 
     public Router port(int port) {
@@ -83,13 +94,9 @@ public class Router {
         if (server == null) {
             server = HttpServer.create(new InetSocketAddress(this.port), 0);
         }
-        server.createContext(this.root, new IOHandler(this));
+        server.createContext("/", new IOHandler(this));
         server.setExecutor(Executors.newFixedThreadPool(this.thread));
         server.start();
-    }
-
-    public Node search(String method, String path) {
-        return tree.search(method + path);
     }
 
     private static class IOHandler implements HttpHandler {

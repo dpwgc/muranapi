@@ -1,6 +1,7 @@
 package com.dpwgc.muranapi;
 
 public enum Method {
+
     GET("GET"),
     POST("POST"),
     PUT("PUT"),
@@ -9,5 +10,14 @@ public enum Method {
     HEAD("HEAD"),
     OPTIONS("OPTIONS"),
     ;
-    Method(String name) {}
+
+    private final String name;
+
+    Method(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
 }

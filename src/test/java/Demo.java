@@ -1,7 +1,4 @@
-import com.dpwgc.muranapi.Params;
-import com.dpwgc.muranapi.Reply;
-import com.dpwgc.muranapi.Request;
-import com.dpwgc.muranapi.Router;
+import com.dpwgc.muranapi.*;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -11,8 +8,13 @@ public class Demo {
     public static void main(String[] args) throws IOException {
         DemoController demo = new DemoController();
         new Router()
+                .root("/root")
                 .get("/hello", demo::hello)
                 .post("/submit", demo::submit)
+                .group("/group", new Group()
+                        .get("/hello", demo::hello)
+                        .post("/submit", demo::submit)
+                )
                 .error(System.out::println)
                 .port(8001)
                 // use https
