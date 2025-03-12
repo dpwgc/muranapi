@@ -7,7 +7,7 @@ public class Reply {
     private Params headers;
 
     public Reply() {
-
+        this.body = "".getBytes();
     }
 
     public Reply(String body) {

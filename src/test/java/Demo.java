@@ -1,5 +1,4 @@
 import com.dpwgc.muranapi.*;
-
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -8,10 +7,10 @@ public class Demo {
     public static void main(String[] args) throws IOException {
         DemoController demo = new DemoController();
         new Router()
-                .root("/root")
+                .root("/v2")
                 .get("/hello", demo::hello)
                 .post("/submit", demo::submit)
-                .group("/group", new Group()
+                .group("/demo", new Group()
                         .get("/hello", demo::hello)
                         .post("/submit", demo::submit)
                 )
@@ -25,7 +24,6 @@ public class Demo {
     public static class DemoController {
 
         public Reply hello(Request request) {
-            System.out.println(request.getHeaders().map());
             System.out.println(request.getQuery().map());
             return new Reply("hi");
         }

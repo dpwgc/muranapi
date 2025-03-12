@@ -38,6 +38,13 @@ public class Group {
         return this.add(Method.OPTIONS, path, handler);
     }
 
+    public Group any(String path, Handler handler) {
+        for (Method method : Method.values()) {
+            return this.add(method, path, handler);
+        }
+        return this;
+    }
+
     public Group add(Method method, String path, Handler handler) {
         items.add(new Triple<>(method, path, handler));
         return this;

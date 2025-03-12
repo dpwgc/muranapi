@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.Executors;
 
@@ -20,6 +21,7 @@ public class Router {
     private int thread = 8;
     private String root = "";
     private Error error;
+    private boolean debug = true;
 
     public Router get(String path, Handler handler) {
         return this.add(Method.GET, path, handler);
@@ -49,6 +51,13 @@ public class Router {
         return this.add(Method.OPTIONS, path, handler);
     }
 
+    public Router any(String path, Handler handler) {
+        for (Method method : Method.values()) {
+            return this.add(method, path, handler);
+        }
+        return this;
+    }
+
     public Router group(String path, Group group) {
         for (Triple<Method, String, Handler> item : group.getItems()) {
             this.add(item.getFirst(), path + item.getSecond(), item.getThird());
@@ -57,7 +66,7 @@ public class Router {
     }
 
     public Router add(Method method, String path, Handler handler) {
-        tree.insert(root + path + method.getName(), new Node(method, handler));
+        tree.insert(root + path + method.getName(), new Node(handler));
         return this;
     }
 
@@ -85,12 +94,27 @@ public class Router {
         return this;
     }
 
+    public Router debug(boolean debug) {
+        this.debug = debug;
+        return this;
+    }
+
     public Router server(HttpServer server) {
         this.server = server;
         return this;
     }
 
+    private static final String MuRanAPI = "___  ___       ______                ___  ______  _____ \n" +
+            "|  \\/  |       | ___ \\              / _ \\ | ___ \\|_   _|\n" +
+            "| .  . | _   _ | |_/ / __ _  _ __  / /_\\ \\| |_/ /  | |  \n" +
+            "| |\\/| || | | ||    / / _` || '_ \\ |  _  ||  __/   | |  \n" +
+            "| |  | || |_| || |\\ \\| (_| || | | || | | || |     _| |_ \n" +
+            "\\_|  |_/ \\__,_|\\_| \\_|\\__,_||_| |_|\\_| |_/\\_|     \\___/ \n";
+
     public void run() throws IOException {
+        if (debug) {
+            System.out.println("\033[34m" + MuRanAPI + "\033[0m");
+        }
         if (server == null) {
             server = HttpServer.create(new InetSocketAddress(this.port), 0);
         }
@@ -110,7 +134,6 @@ public class Router {
         @Override
         public void handle(HttpExchange httpExchange) {
             try {
-
                 Node node = router.search(httpExchange.getRequestMethod(), httpExchange.getRequestURI().getPath());
 
                 if (node == null) {
@@ -170,21 +193,29 @@ public class Router {
                         httpExchange.getResponseHeaders().add(key, reply.getHeaders().get(key));
                     }
                 }
-
+                // 返回
                 response(httpExchange, reply.getCode(), reply.getBody());
-
-            } catch (Throwable e) {
-                error(e);
+            } catch (Throwable oe) {
+                error(oe);
             }
         }
 
         private void error(Throwable e) {
+            if (e == null) {
+                return;
+            }
+            if (router.debug) {
+                e.printStackTrace();
+            }
             if (router.error != null) {
                 router.error.execute(e);
             }
         }
 
         private void response(HttpExchange httpExchange, int code, byte[] body) throws IOException {
+            if (router.debug) {
+                System.out.printf("\033[32m[%s]\033[0m %s%s -> %s%n", httpExchange.getRequestMethod(), router.port, httpExchange.getRequestURI().getPath(), code);
+            }
             httpExchange.sendResponseHeaders(code, body.length);
             OutputStream out = httpExchange.getResponseBody();
             out.write(body);
